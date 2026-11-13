@@ -14,6 +14,8 @@ their own respective license:
   linking with Gmsh under Gmsh license
 * MathEx: GNU Lesser General Public License (LGPL) v. 2.1 or later, with static
   linking exception
+* MeshArrange: BSD 3-Clause License (with MPL 2.0 libigl headers and optional
+  CGAL dependency under GPL v. 3 or later)
 * MeshOptimizer: MIT/X11 License
 * MeshQualityOptimizer: MIT/X11 License
 * metis: Apache License (APL), v. 2.0

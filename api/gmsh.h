@@ -2168,6 +2168,38 @@ namespace gmsh { // Top-level functions
       GMSH_API void createTopology(const bool makeSimplyConnected = true,
                                    const bool exportDiscrete = true);
 
+      // gmsh::model::mesh::arrangeSurfaces
+      //
+      // Intersect the closed discrete 3D volumes or 2D surface shells
+      // `objectDimTags' and optional clipping tools `toolDimTags' (given as
+      // vectors of (dim, tag) pairs), segmenting non-manifold 3D regions, 2D
+      // region boundaries, and 1D/0D seam topologies. Optional `objectPriorities'
+      // and `toolPriorities' resolve boolean overlap precedence (higher integer
+      // wins). Each entry in `toolTypes' specifies whether the corresponding tool
+      // subtracts its interior (`>= 0', void/cut) or clips everything outside (`<
+      // 0', RVE window). If `removeOverlaps' is set, equal-priority multi-material
+      // overlaps are partitioned along smooth harmonic medial surfaces. If
+      // `optimizeSurfaces' is set, arranged surface triangulations are optimized
+      // with edge flips and feature-preserving tangential smoothing (optionally
+      // bounded by `maxEdgeLength' > 0). If `createGeometry' is set, parametrize
+      // the arranged discrete surfaces. Remove input objects/tools if
+      // `removeObject' / `removeTool' are set. Return all resulting 3D volumes in
+      // `outDimTags', and the parent-to-child volume correspondence for
+      // `objectDimTags' followed by `toolDimTags' in `outDimTagsMap'.
+      GMSH_API void arrangeSurfaces(const gmsh::vectorpair & objectDimTags,
+                                    const gmsh::vectorpair & toolDimTags,
+                                    gmsh::vectorpair & outDimTags,
+                                    std::vector<gmsh::vectorpair> & outDimTagsMap,
+                                    const std::vector<int> & objectPriorities = std::vector<int>(),
+                                    const std::vector<int> & toolTypes = std::vector<int>(),
+                                    const std::vector<int> & toolPriorities = std::vector<int>(),
+                                    const bool removeOverlaps = true,
+                                    const bool optimizeSurfaces = false,
+                                    const double maxEdgeLength = 0.,
+                                    const bool createGeometry = false,
+                                    const bool removeObject = true,
+                                    const bool removeTool = true);
+
       // gmsh::model::mesh::addHomologyRequest
       //
       // Add a request to compute a basis representation for homology spaces (if

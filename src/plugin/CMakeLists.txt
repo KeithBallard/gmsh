@@ -41,6 +41,7 @@ set(SRC
   Summation.cpp
   BoundaryAngles.cpp
   MeshSizeFieldView.cpp
+  ArrangeSurfaces.cpp
   Invisible.cpp
 )
 

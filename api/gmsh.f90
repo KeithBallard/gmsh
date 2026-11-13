@@ -772,6 +772,8 @@ module gmsh
         gmshModelMeshCreateGeometry
     procedure, nopass :: createTopology => &
         gmshModelMeshCreateTopology
+    procedure, nopass :: arrangeSurfaces => &
+        gmshModelMeshArrangeSurfaces
     procedure, nopass :: addHomologyRequest => &
         gmshModelMeshAddHomologyRequest
     procedure, nopass :: clearHomologyRequests => &
@@ -8518,6 +8520,136 @@ module gmsh
          exportDiscrete=optval_c_bool(.true., exportDiscrete), &
          ierr_=ierr)
   end subroutine gmshModelMeshCreateTopology
+
+  !> Intersect the closed discrete 3D volumes or 2D surface shells
+  !! `objectDimTags' and optional clipping tools `toolDimTags' (given as vectors
+  !! of (dim, tag) pairs), segmenting non-manifold 3D regions, 2D region
+  !! boundaries, and 1D/0D seam topologies. Optional `objectPriorities' and
+  !! `toolPriorities' resolve boolean overlap precedence (higher integer wins).
+  !! Each entry in `toolTypes' specifies whether the corresponding tool
+  !! subtracts its interior (`>= 0', void/cut) or clips everything outside (`<
+  !! 0', RVE window). If `removeOverlaps' is set, equal-priority multi-material
+  !! overlaps are partitioned along smooth harmonic medial surfaces. If
+  !! `optimizeSurfaces' is set, arranged surface triangulations are optimized
+  !! with edge flips and feature-preserving tangential smoothing (optionally
+  !! bounded by `maxEdgeLength' > 0). If `createGeometry' is set, parametrize
+  !! the arranged discrete surfaces. Remove input objects/tools if
+  !! `removeObject' / `removeTool' are set. Return all resulting 3D volumes in
+  !! `outDimTags', and the parent-to-child volume correspondence for
+  !! `objectDimTags' followed by `toolDimTags' in `outDimTagsMap'.
+  subroutine gmshModelMeshArrangeSurfaces(objectDimTags, &
+                                          toolDimTags, &
+                                          outDimTags, &
+                                          outDimTagsMap, &
+                                          outDimTagsMap_n, &
+                                          objectPriorities, &
+                                          toolTypes, &
+                                          toolPriorities, &
+                                          removeOverlaps, &
+                                          optimizeSurfaces, &
+                                          maxEdgeLength, &
+                                          createGeometry, &
+                                          removeObject, &
+                                          removeTool, &
+                                          ierr)
+    interface
+    subroutine C_API(api_objectDimTags_, &
+                     api_objectDimTags_n_, &
+                     api_toolDimTags_, &
+                     api_toolDimTags_n_, &
+                     api_outDimTags_, &
+                     api_outDimTags_n_, &
+                     api_outDimTagsMap_, &
+                     api_outDimTagsMap_n_, &
+                     api_outDimTagsMap_nn_, &
+                     api_objectPriorities_, &
+                     api_objectPriorities_n_, &
+                     api_toolTypes_, &
+                     api_toolTypes_n_, &
+                     api_toolPriorities_, &
+                     api_toolPriorities_n_, &
+                     removeOverlaps, &
+                     optimizeSurfaces, &
+                     maxEdgeLength, &
+                     createGeometry, &
+                     removeObject, &
+                     removeTool, &
+                     ierr_) &
+      bind(C, name="gmshModelMeshArrangeSurfaces")
+      use, intrinsic :: iso_c_binding
+      integer(c_int), dimension(*) :: api_objectDimTags_
+      integer(c_size_t), value, intent(in) :: api_objectDimTags_n_
+      integer(c_int), dimension(*) :: api_toolDimTags_
+      integer(c_size_t), value, intent(in) :: api_toolDimTags_n_
+      type(c_ptr), intent(out) :: api_outDimTags_
+      integer(c_size_t), intent(out) :: api_outDimTags_n_
+      type(c_ptr), intent(out) :: api_outDimTagsMap_
+      type(c_ptr), intent(out) :: api_outDimTagsMap_n_
+      integer(c_size_t) :: api_outDimTagsMap_nn_
+      integer(c_int), dimension(*), optional :: api_objectPriorities_
+      integer(c_size_t), value, intent(in) :: api_objectPriorities_n_
+      integer(c_int), dimension(*), optional :: api_toolTypes_
+      integer(c_size_t), value, intent(in) :: api_toolTypes_n_
+      integer(c_int), dimension(*), optional :: api_toolPriorities_
+      integer(c_size_t), value, intent(in) :: api_toolPriorities_n_
+      integer(c_int), value, intent(in) :: removeOverlaps
+      integer(c_int), value, intent(in) :: optimizeSurfaces
+      real(c_double), value, intent(in) :: maxEdgeLength
+      integer(c_int), value, intent(in) :: createGeometry
+      integer(c_int), value, intent(in) :: removeObject
+      integer(c_int), value, intent(in) :: removeTool
+      integer(c_int), intent(out), optional :: ierr_
+    end subroutine C_API
+    end interface
+    integer(c_int), dimension(:,:), intent(in) :: objectDimTags
+    integer(c_int), dimension(:,:), intent(in) :: toolDimTags
+    integer(c_int), dimension(:,:), allocatable, intent(out) :: outDimTags
+    integer(c_int), dimension(:,:), allocatable, intent(out) :: outDimTagsMap
+    integer(c_size_t), dimension(:), allocatable, intent(out) :: outDimTagsMap_n
+    integer(c_int), dimension(:), intent(in), optional :: objectPriorities
+    integer(c_int), dimension(:), intent(in), optional :: toolTypes
+    integer(c_int), dimension(:), intent(in), optional :: toolPriorities
+    logical, intent(in), optional :: removeOverlaps
+    logical, intent(in), optional :: optimizeSurfaces
+    real(c_double), intent(in), optional :: maxEdgeLength
+    logical, intent(in), optional :: createGeometry
+    logical, intent(in), optional :: removeObject
+    logical, intent(in), optional :: removeTool
+    integer(c_int), intent(out), optional :: ierr
+    type(c_ptr) :: api_outDimTags_
+    integer(c_size_t) :: api_outDimTags_n_
+    type(c_ptr) :: api_outDimTagsMap_, api_outDimTagsMap_n_
+    integer(c_size_t) :: api_outDimTagsMap_nn_
+    call C_API(api_objectDimTags_=objectDimTags, &
+         api_objectDimTags_n_=size_gmsh_pair(objectDimTags), &
+         api_toolDimTags_=toolDimTags, &
+         api_toolDimTags_n_=size_gmsh_pair(toolDimTags), &
+         api_outDimTags_=api_outDimTags_, &
+         api_outDimTags_n_=api_outDimTags_n_, &
+         api_outDimTagsMap_=api_outDimTagsMap_, &
+         api_outDimTagsMap_n_=api_outDimTagsMap_n_, &
+         api_outDimTagsMap_nn_=api_outDimTagsMap_nn_, &
+         api_objectPriorities_=objectPriorities, &
+         api_objectPriorities_n_=size_gmsh_int(objectPriorities), &
+         api_toolTypes_=toolTypes, &
+         api_toolTypes_n_=size_gmsh_int(toolTypes), &
+         api_toolPriorities_=toolPriorities, &
+         api_toolPriorities_n_=size_gmsh_int(toolPriorities), &
+         removeOverlaps=optval_c_bool(.true., removeOverlaps), &
+         optimizeSurfaces=optval_c_bool(.false., optimizeSurfaces), &
+         maxEdgeLength=optval_c_double(0., maxEdgeLength), &
+         createGeometry=optval_c_bool(.false., createGeometry), &
+         removeObject=optval_c_bool(.true., removeObject), &
+         removeTool=optval_c_bool(.true., removeTool), &
+         ierr_=ierr)
+    outDimTags = ovectorpair_(api_outDimTags_, &
+      api_outDimTags_n_)
+    call ovectorvectorpair_(api_outDimTagsMap_, &
+      api_outDimTagsMap_n_, &
+      api_outDimTagsMap_nn_, &
+      outDimTagsMap, &
+      outDimTagsMap_n)
+  end subroutine gmshModelMeshArrangeSurfaces
 
   !> Add a request to compute a basis representation for homology spaces (if
   !! `type' == "Homology") or cohomology spaces (if `type' == "Cohomology"). The

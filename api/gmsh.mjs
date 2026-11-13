@@ -4606,6 +4606,49 @@ export function wrapGmsh(Module) {
   };
 
   /**
+   * gmsh.model.mesh.arrangeSurfaces(objectDimTags, toolDimTags, objectPriorities = [], toolTypes = [], toolPriorities = [], removeOverlaps = true, optimizeSurfaces = false, maxEdgeLength = 0., createGeometry = false, removeObject = true, removeTool = true)
+   *
+   * Intersect the closed discrete 3D volumes or 2D surface shells
+   * `objectDimTags' and optional clipping tools `toolDimTags' (given as
+   * vectors of (dim, tag) pairs), segmenting non-manifold 3D regions, 2D
+   * region boundaries, and 1D/0D seam topologies. Optional `objectPriorities'
+   * and `toolPriorities' resolve boolean overlap precedence (higher integer
+   * wins). Each entry in `toolTypes' specifies whether the corresponding tool
+   * subtracts its interior (`>= 0', void/cut) or clips everything outside (`<
+   * 0', RVE window). If `removeOverlaps' is set, equal-priority multi-
+   * material overlaps are partitioned along smooth harmonic medial surfaces.
+   * If `optimizeSurfaces' is set, arranged surface triangulations are
+   * optimized with edge flips and feature-preserving tangential smoothing
+   * (optionally bounded by `maxEdgeLength' > 0). If `createGeometry' is set,
+   * parametrize the arranged discrete surfaces. Remove input objects/tools if
+   * `removeObject' / `removeTool' are set. Return all resulting 3D volumes in
+   * `outDimTags', and the parent-to-child volume correspondence for
+   * `objectDimTags' followed by `toolDimTags' in `outDimTagsMap'.
+   *
+   * Return `outDimTags', `outDimTagsMap'.
+   */
+  gmsh.model.mesh.arrangeSurfaces = function(objectDimTags, toolDimTags, objectPriorities = [], toolTypes = [], toolPriorities = [], removeOverlaps = true, optimizeSurfaces = false, maxEdgeLength = 0., createGeometry = false, removeObject = true, removeTool = true) {
+    const tmp = [];
+    try {
+      const [api_objectDimTags_, api_objectDimTags_n] = _ivectorpair(objectDimTags, tmp);
+      const [api_toolDimTags_, api_toolDimTags_n] = _ivectorpair(toolDimTags, tmp);
+      const api_outDimTags_ = _alloc(8, tmp);
+      const api_outDimTagsMap_ = _alloc(12, tmp);
+      const [api_objectPriorities_, api_objectPriorities_n] = _ivector(objectPriorities, 'int', tmp);
+      const [api_toolTypes_, api_toolTypes_n] = _ivector(toolTypes, 'int', tmp);
+      const [api_toolPriorities_, api_toolPriorities_n] = _ivector(toolPriorities, 'int', tmp);
+      M._gmshModelMeshArrangeSurfaces(api_objectDimTags_, api_objectDimTags_n, api_toolDimTags_, api_toolDimTags_n, api_outDimTags_, api_outDimTags_ + 4, api_outDimTagsMap_, api_outDimTagsMap_ + 4, api_outDimTagsMap_ + 8, api_objectPriorities_, api_objectPriorities_n, api_toolTypes_, api_toolTypes_n, api_toolPriorities_, api_toolPriorities_n, removeOverlaps ? 1 : 0, optimizeSurfaces ? 1 : 0, maxEdgeLength, createGeometry ? 1 : 0, removeObject ? 1 : 0, removeTool ? 1 : 0, ierr);
+      _check();
+      return [
+        _ovectorpair(api_outDimTags_),
+        _ovectorvector(api_outDimTagsMap_, 'int', true)];
+    }
+    finally {
+      tmp.forEach((p) => M._free(p));
+    }
+  };
+
+  /**
    * gmsh.model.mesh.addHomologyRequest(type = "Homology", domainTags = [], subdomainTags = [], dims = [])
    *
    * Add a request to compute a basis representation for homology spaces (if

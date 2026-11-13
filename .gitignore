@@ -1,5 +1,6 @@
 bin*/
 lib*/
+!contrib/MeshArrange/third_party/libigl/
 build*/
 install/
 contrib/mobile/frameworks_*

@@ -57,6 +57,7 @@ opt(HXT "Enable HXT library (for reparametrization and meshing)" ${DEFAULT})
 opt(MATHEX "Enable Mathex expression parser (used by plugins and options)" ${DEFAULT})
 opt(MED "Enable MED mesh and post file formats" ${DEFAULT})
 opt(MESH "Enable mesh module" ${DEFAULT})
+opt(MESH_ARRANGE "Enable discrete surface arrangement and multi-material overlap removal" ${DEFAULT})
 opt(MESQUITE "Enable mesquite" ${DEFAULT})
 opt(METIS "Enable Metis mesh partitioner" ${DEFAULT})
 opt(MTMETIS "Enable multithreaded mt-metis mesh partitioner (requires Metis and OpenMP)" ${DEFAULT})
@@ -1056,6 +1057,27 @@ if(HAVE_MESH)
     set_config_option(HAVE_QUADMESHINGTOOLS "QuadMeshingTools")
     add_subdirectory(contrib/QuadMeshingTools)
     include_directories(BEFORE contrib/QuadMeshingTools)
+  endif()
+
+  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/contrib/MeshArrange
+     AND ENABLE_MESH_ARRANGE AND HAVE_EIGEN)
+    find_path(CGAL_INC "CGAL/Exact_predicates_exact_constructions_kernel.h"
+              PATH_SUFFIXES include)
+    find_path(BOOST_INC "boost/config.hpp" PATH_SUFFIXES include)
+    find_path(GMP_INC "gmp.h" PATH_SUFFIXES include)
+    find_library(GMP_LIB NAMES gmp)
+    find_path(MPFR_INC "mpfr.h" PATH_SUFFIXES include)
+    find_library(MPFR_LIB NAMES mpfr)
+    if(CGAL_INC AND BOOST_INC AND GMP_INC AND GMP_LIB AND MPFR_INC AND MPFR_LIB)
+      set(MESHARRANGE_EXTERNAL_INCLUDES
+          ${CGAL_INC} ${BOOST_INC} ${GMP_INC} ${MPFR_INC})
+      add_subdirectory(contrib/MeshArrange)
+      include_directories(contrib/MeshArrange/include)
+      list(APPEND EXTERNAL_LIBRARIES ${MPFR_LIB} ${GMP_LIB})
+      set_config_option(HAVE_MESH_ARRANGE "MeshArrange")
+    else()
+      message(STATUS "MeshArrange dependencies (CGAL, Boost, GMP, MPFR) not found")
+    endif()
   endif()
 endif()
 
@@ -2349,6 +2371,11 @@ macro(filter_tests IN OUT)
       file(STRINGS ${FILE} BAD1 REGEX ".*PartitionMesh.*")
       file(STRINGS ${FILE} BAD2 REGEX ".*mesh.*partition.*")
     endif()
+    # MeshArrange
+    if(NOT HAVE_MESH_ARRANGE AND NOT BAD1 AND NOT BAD2 AND NOT BAD3)
+      file(STRINGS ${FILE} BAD1 REGEX ".*ArrangeSurfaces.*")
+      file(STRINGS ${FILE} BAD2 REGEX ".*arrangeSurfaces.*")
+    endif()
     if(BAD1 OR BAD2 OR BAD3)
       message("Skipping test " ${FILE})
     else()
@@ -2493,6 +2520,7 @@ message(STATUS " * Install prefix: " ${CMAKE_INSTALL_PREFIX})
 message(STATUS "")
 
 mark_as_advanced(AVCODEC_LIB AVFORMAT_LIB AVUTIL_LIB
+                 BOOST_INC CGAL_INC GMP_INC GMP_LIB MPFR_INC MPFR_LIB
                  CGNS_INC FFMPEG_INC SWSCALE_LIB GMM_INC
                  MMG_INC MMG_LIB HDF5_LIB
                  MED_LIB OCC_INC SZ_LIB

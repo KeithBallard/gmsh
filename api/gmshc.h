@@ -1938,6 +1938,37 @@ GMSH_API void gmshModelMeshCreateTopology(const int makeSimplyConnected,
                                           const int exportDiscrete,
                                           int * ierr);
 
+/* Intersect the closed discrete 3D volumes or 2D surface shells
+ * `objectDimTags' and optional clipping tools `toolDimTags' (given as vectors
+ * of (dim, tag) pairs), segmenting non-manifold 3D regions, 2D region
+ * boundaries, and 1D/0D seam topologies. Optional `objectPriorities' and
+ * `toolPriorities' resolve boolean overlap precedence (higher integer wins).
+ * Each entry in `toolTypes' specifies whether the corresponding tool
+ * subtracts its interior (`>= 0', void/cut) or clips everything outside (`<
+ * 0', RVE window). If `removeOverlaps' is set, equal-priority multi-material
+ * overlaps are partitioned along smooth harmonic medial surfaces. If
+ * `optimizeSurfaces' is set, arranged surface triangulations are optimized
+ * with edge flips and feature-preserving tangential smoothing (optionally
+ * bounded by `maxEdgeLength' > 0). If `createGeometry' is set, parametrize
+ * the arranged discrete surfaces. Remove input objects/tools if
+ * `removeObject' / `removeTool' are set. Return all resulting 3D volumes in
+ * `outDimTags', and the parent-to-child volume correspondence for
+ * `objectDimTags' followed by `toolDimTags' in `outDimTagsMap'. */
+GMSH_API void gmshModelMeshArrangeSurfaces(const int * objectDimTags, const size_t objectDimTags_n,
+                                           const int * toolDimTags, const size_t toolDimTags_n,
+                                           int ** outDimTags, size_t * outDimTags_n,
+                                           int *** outDimTagsMap, size_t ** outDimTagsMap_n, size_t *outDimTagsMap_nn,
+                                           const int * objectPriorities, const size_t objectPriorities_n,
+                                           const int * toolTypes, const size_t toolTypes_n,
+                                           const int * toolPriorities, const size_t toolPriorities_n,
+                                           const int removeOverlaps,
+                                           const int optimizeSurfaces,
+                                           const double maxEdgeLength,
+                                           const int createGeometry,
+                                           const int removeObject,
+                                           const int removeTool,
+                                           int * ierr);
+
 /* Add a request to compute a basis representation for homology spaces (if
  * `type' == "Homology") or cohomology spaces (if `type' == "Cohomology"). The
  * computation domain is given in a list of physical group tags `domainTags';

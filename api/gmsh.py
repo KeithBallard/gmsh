@@ -5820,6 +5820,75 @@ class model:
         create_topology = createTopology
 
         @staticmethod
+        def arrangeSurfaces(objectDimTags, toolDimTags, objectPriorities=[], toolTypes=[], toolPriorities=[], removeOverlaps=True, optimizeSurfaces=False, maxEdgeLength=0., createGeometry=False, removeObject=True, removeTool=True):
+            """
+            gmsh.model.mesh.arrangeSurfaces(objectDimTags, toolDimTags, objectPriorities=[], toolTypes=[], toolPriorities=[], removeOverlaps=True, optimizeSurfaces=False, maxEdgeLength=0., createGeometry=False, removeObject=True, removeTool=True)
+
+            Intersect the closed discrete 3D volumes or 2D surface shells
+            `objectDimTags' and optional clipping tools `toolDimTags' (given as vectors
+            of (dim, tag) pairs), segmenting non-manifold 3D regions, 2D region
+            boundaries, and 1D/0D seam topologies. Optional `objectPriorities' and
+            `toolPriorities' resolve boolean overlap precedence (higher integer wins).
+            Each entry in `toolTypes' specifies whether the corresponding tool
+            subtracts its interior (`>= 0', void/cut) or clips everything outside (`<
+            0', RVE window). If `removeOverlaps' is set, equal-priority multi-material
+            overlaps are partitioned along smooth harmonic medial surfaces. If
+            `optimizeSurfaces' is set, arranged surface triangulations are optimized
+            with edge flips and feature-preserving tangential smoothing (optionally
+            bounded by `maxEdgeLength' > 0). If `createGeometry' is set, parametrize
+            the arranged discrete surfaces. Remove input objects/tools if
+            `removeObject' / `removeTool' are set. Return all resulting 3D volumes in
+            `outDimTags', and the parent-to-child volume correspondence for
+            `objectDimTags' followed by `toolDimTags' in `outDimTagsMap'.
+
+            Return `outDimTags', `outDimTagsMap'.
+
+            Types:
+            - `objectDimTags': vector of pairs of integers
+            - `toolDimTags': vector of pairs of integers
+            - `outDimTags': vector of pairs of integers
+            - `outDimTagsMap': vector of vectors of pairs of integers
+            - `objectPriorities': vector of integers
+            - `toolTypes': vector of integers
+            - `toolPriorities': vector of integers
+            - `removeOverlaps': boolean
+            - `optimizeSurfaces': boolean
+            - `maxEdgeLength': double
+            - `createGeometry': boolean
+            - `removeObject': boolean
+            - `removeTool': boolean
+            """
+            api_objectDimTags_, api_objectDimTags_n_ = _ivectorpair(objectDimTags)
+            api_toolDimTags_, api_toolDimTags_n_ = _ivectorpair(toolDimTags)
+            api_outDimTags_, api_outDimTags_n_ = POINTER(c_int)(), c_size_t()
+            api_outDimTagsMap_, api_outDimTagsMap_n_, api_outDimTagsMap_nn_ = POINTER(POINTER(c_int))(), POINTER(c_size_t)(), c_size_t()
+            api_objectPriorities_, api_objectPriorities_n_ = _ivectorint(objectPriorities)
+            api_toolTypes_, api_toolTypes_n_ = _ivectorint(toolTypes)
+            api_toolPriorities_, api_toolPriorities_n_ = _ivectorint(toolPriorities)
+            ierr = c_int()
+            lib.gmshModelMeshArrangeSurfaces(
+                api_objectDimTags_, api_objectDimTags_n_,
+                api_toolDimTags_, api_toolDimTags_n_,
+                byref(api_outDimTags_), byref(api_outDimTags_n_),
+                byref(api_outDimTagsMap_), byref(api_outDimTagsMap_n_), byref(api_outDimTagsMap_nn_),
+                api_objectPriorities_, api_objectPriorities_n_,
+                api_toolTypes_, api_toolTypes_n_,
+                api_toolPriorities_, api_toolPriorities_n_,
+                c_int(bool(removeOverlaps)),
+                c_int(bool(optimizeSurfaces)),
+                c_double(maxEdgeLength),
+                c_int(bool(createGeometry)),
+                c_int(bool(removeObject)),
+                c_int(bool(removeTool)),
+                byref(ierr))
+            if ierr.value != 0:
+                raise Exception(logger.getLastError())
+            return (
+                _ovectorpair(api_outDimTags_, api_outDimTags_n_.value),
+                _ovectorvectorpair(api_outDimTagsMap_, api_outDimTagsMap_n_, api_outDimTagsMap_nn_))
+        arrange_surfaces = arrangeSurfaces
+
+        @staticmethod
         def addHomologyRequest(type="Homology", domainTags=[], subdomainTags=[], dims=[]):
             """
             gmsh.model.mesh.addHomologyRequest(type="Homology", domainTags=[], subdomainTags=[], dims=[])

@@ -5141,6 +5141,71 @@ end
 const create_topology = createTopology
 
 """
+    gmsh.model.mesh.arrangeSurfaces(objectDimTags, toolDimTags, objectPriorities = Cint[], toolTypes = Cint[], toolPriorities = Cint[], removeOverlaps = true, optimizeSurfaces = false, maxEdgeLength = 0., createGeometry = false, removeObject = true, removeTool = true)
+
+Intersect the closed discrete 3D volumes or 2D surface shells `objectDimTags`
+and optional clipping tools `toolDimTags` (given as vectors of (dim, tag)
+pairs), segmenting non-manifold 3D regions, 2D region boundaries, and 1D/0D seam
+topologies. Optional `objectPriorities` and `toolPriorities` resolve boolean
+overlap precedence (higher integer wins). Each entry in `toolTypes` specifies
+whether the corresponding tool subtracts its interior (`>= 0`, void/cut) or
+clips everything outside (`< 0`, RVE window). If `removeOverlaps` is set, equal-
+priority multi-material overlaps are partitioned along smooth harmonic medial
+surfaces. If `optimizeSurfaces` is set, arranged surface triangulations are
+optimized with edge flips and feature-preserving tangential smoothing
+(optionally bounded by `maxEdgeLength` > 0). If `createGeometry` is set,
+parametrize the arranged discrete surfaces. Remove input objects/tools if
+`removeObject` / `removeTool` are set. Return all resulting 3D volumes in
+`outDimTags`, and the parent-to-child volume correspondence for `objectDimTags`
+followed by `toolDimTags` in `outDimTagsMap`.
+
+Return `outDimTags`, `outDimTagsMap`.
+
+Types:
+ - `objectDimTags`: vector of pairs of integers
+ - `toolDimTags`: vector of pairs of integers
+ - `outDimTags`: vector of pairs of integers
+ - `outDimTagsMap`: vector of vectors of pairs of integers
+ - `objectPriorities`: vector of integers
+ - `toolTypes`: vector of integers
+ - `toolPriorities`: vector of integers
+ - `removeOverlaps`: boolean
+ - `optimizeSurfaces`: boolean
+ - `maxEdgeLength`: double
+ - `createGeometry`: boolean
+ - `removeObject`: boolean
+ - `removeTool`: boolean
+"""
+function arrangeSurfaces(objectDimTags, toolDimTags, objectPriorities = Cint[], toolTypes = Cint[], toolPriorities = Cint[], removeOverlaps = true, optimizeSurfaces = false, maxEdgeLength = 0., createGeometry = false, removeObject = true, removeTool = true)
+    api_objectDimTags_ = collect(Cint, Iterators.flatten(objectDimTags))
+    api_objectDimTags_n_ = length(api_objectDimTags_)
+    api_toolDimTags_ = collect(Cint, Iterators.flatten(toolDimTags))
+    api_toolDimTags_n_ = length(api_toolDimTags_)
+    api_outDimTags_ = Ref{Ptr{Cint}}()
+    api_outDimTags_n_ = Ref{Csize_t}()
+    api_outDimTagsMap_ = Ref{Ptr{Ptr{Cint}}}()
+    api_outDimTagsMap_n_ = Ref{Ptr{Csize_t}}()
+    api_outDimTagsMap_nn_ = Ref{Csize_t}()
+    ierr = Ref{Cint}()
+    ccall((:gmshModelMeshArrangeSurfaces, gmsh.lib), Cvoid,
+          (Ptr{Cint}, Csize_t, Ptr{Cint}, Csize_t, Ptr{Ptr{Cint}}, Ptr{Csize_t}, Ptr{Ptr{Ptr{Cint}}}, Ptr{Ptr{Csize_t}}, Ptr{Csize_t}, Ptr{Cint}, Csize_t, Ptr{Cint}, Csize_t, Ptr{Cint}, Csize_t, Cint, Cint, Cdouble, Cint, Cint, Cint, Ptr{Cint}),
+          api_objectDimTags_, api_objectDimTags_n_, api_toolDimTags_, api_toolDimTags_n_, api_outDimTags_, api_outDimTags_n_, api_outDimTagsMap_, api_outDimTagsMap_n_, api_outDimTagsMap_nn_, convert(Vector{Cint}, objectPriorities), length(objectPriorities), convert(Vector{Cint}, toolTypes), length(toolTypes), convert(Vector{Cint}, toolPriorities), length(toolPriorities), removeOverlaps, optimizeSurfaces, maxEdgeLength, createGeometry, removeObject, removeTool, ierr)
+    ierr[] != 0 && error(gmsh.logger.getLastError())
+    tmp_api_outDimTags_ = unsafe_wrap(Array, api_outDimTags_[], api_outDimTags_n_[], own = true)
+    outDimTags = [ (tmp_api_outDimTags_[i], tmp_api_outDimTags_[i+1]) for i in 1:2:length(tmp_api_outDimTags_) ]
+    tmp_api_outDimTagsMap_ = unsafe_wrap(Array, api_outDimTagsMap_[], api_outDimTagsMap_nn_[], own = true)
+    tmp_api_outDimTagsMap_n_ = unsafe_wrap(Array, api_outDimTagsMap_n_[], api_outDimTagsMap_nn_[], own = true)
+    outDimTagsMap = Vector{Tuple{Cint,Cint}}[]
+    resize!(outDimTagsMap, api_outDimTagsMap_nn_[])
+    for i in 1:api_outDimTagsMap_nn_[]
+        tmp = unsafe_wrap(Array, tmp_api_outDimTagsMap_[i], tmp_api_outDimTagsMap_n_[i], own = true)
+        outDimTagsMap[i] = [(tmp[i], tmp[i+1]) for i in 1:2:length(tmp)]
+    end
+    return outDimTags, outDimTagsMap
+end
+const arrange_surfaces = arrangeSurfaces
+
+"""
     gmsh.model.mesh.addHomologyRequest(type = "Homology", domainTags = Cint[], subdomainTags = Cint[], dims = Cint[])
 
 Add a request to compute a basis representation for homology spaces (if `type`

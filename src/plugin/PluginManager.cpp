@@ -74,6 +74,7 @@
 #include "Summation.h"
 #include "BoundaryAngles.h"
 #include "MeshSizeFieldView.h"
+#include "ArrangeSurfaces.h"
 #include "DuplicateNodes.h"
 
 #if defined(HAVE_BOUNDARY_LAYERS)
@@ -268,7 +269,7 @@ void PluginManager::registerDefaultPlugins()
     add(new GMSH_VoroMetalPlugin());
     add(new GMSH_TetrahedralizePlugin());
     add(new GMSH_MeshSizeFieldViewPlugin());
-
+    add(new GMSH_ArrangeSurfacesPlugin());
 #endif
 #if defined(HAVE_SOLVER)
     add(new GMSH_DistancePlugin());

@@ -49,6 +49,7 @@ set(SRC
   meshOctreeLibOL.cpp
   meshCombine3D.cpp
   meshDuplicateVertices.cpp
+  meshArrange.cpp
  )
 
 file(GLOB HDR RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)

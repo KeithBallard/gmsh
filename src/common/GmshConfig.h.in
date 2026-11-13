@@ -32,6 +32,7 @@
 #cmakedefine HAVE_MATHEX
 #cmakedefine HAVE_MED
 #cmakedefine HAVE_MESH
+#cmakedefine HAVE_MESH_ARRANGE
 #cmakedefine HAVE_MESQUITE
 #cmakedefine HAVE_METIS
 #cmakedefine HAVE_MTMETIS
